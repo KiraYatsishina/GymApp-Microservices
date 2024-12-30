@@ -42,10 +42,4 @@ public class AuthController {
 
         return new ResponseEntity<>(userDTO.get(), HttpStatus.OK);
     }
-
-    @GetMapping("/validate")
-    public boolean validateToken(@RequestHeader("Authorization") String token) {
-        boolean valid = authService.validateToken(token);
-        return valid;
-    }
 }

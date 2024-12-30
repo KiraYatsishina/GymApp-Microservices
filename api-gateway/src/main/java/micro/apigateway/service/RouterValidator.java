@@ -14,7 +14,8 @@ public class RouterValidator {
             "/auth/signup-trainer",
             "/auth/token",
             "/auth/validate",
-            "/workload/trainer/check",
+            //"/workload/trainer/check",
+           // "/workload/trainer/action-training-duration",
             "/eureka"
     );
 

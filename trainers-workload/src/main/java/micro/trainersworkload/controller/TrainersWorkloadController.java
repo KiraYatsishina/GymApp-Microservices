@@ -7,7 +7,6 @@ import micro.trainersworkload.dto.TrainerWorkloadDTO;
 import micro.trainersworkload.service.TrainersWorkloadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,13 +24,12 @@ public class TrainersWorkloadController {
         return new ResponseEntity<>(new MonthlySummaryDTO(), HttpStatus.OK);
     }
 
-    @PostMapping("action-training-duration")
+    @PostMapping("/action-training-duration")
     public ResponseEntity actionTrainingDuration(ActionTrainingDTO trainingDTO){
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
     @GetMapping("/check")
-    //@PreAuthorize("hasAuthority('ROLE_TRAINER')")
     public ResponseEntity<String> checkTraining(){
         return new ResponseEntity<>("ok", HttpStatus.OK);
     }

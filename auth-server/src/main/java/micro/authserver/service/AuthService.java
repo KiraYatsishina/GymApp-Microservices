@@ -1,13 +1,9 @@
 package micro.authserver.service;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import micro.authserver.dto.UserDTO;
 import micro.authserver.entity.Role;
-import micro.authserver.entity.Token;
 import micro.authserver.entity.User;
-import micro.authserver.repository.TokenRepository;
 import micro.authserver.repository.UserRepository;
 import micro.authserver.util.JwtCore;
 import org.springframework.http.HttpStatus;
@@ -20,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,7 +23,6 @@ import java.util.Optional;
 public class AuthService {
 
     private final LoginAttemptService loginAttemptService;
-    private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
     private final UserService userService;
     private final JwtCore jwtTokenUtils;
@@ -53,27 +47,12 @@ public class AuthService {
         String jwt = jwtTokenUtils.generateToken(userDetails);
 
         Optional<User> user = userRepository.findByUsername(username);
-        revokeAllByUser(user);
-        saveToken(user.get(), jwt);
+
 
         return ResponseEntity.ok(jwt);
     }
 
-    public void revokeAllByUser(Optional<User> user) {
-        List<Token> validTokenByUser = tokenRepository.findAllAccessTokensByUser(user.get().getUserId());
-        if(!validTokenByUser.isEmpty()){
-            validTokenByUser.forEach(token -> token.setLoggedOut(true));
-        }
-        tokenRepository.saveAll(validTokenByUser);
-    }
 
-    private void saveToken(User user, String jwt) {
-        Token token = new Token();
-        token.setToken(jwt);
-        token.setLoggedOut(false);
-        token.setUser(user);
-        tokenRepository.save(token);
-    }
 
     public Optional<UserDTO> signUpUser(String firstname, String lastname, Role role) {
         long count = userRepository.countByFirstNameAndLastName(firstname, lastname);
@@ -112,24 +91,5 @@ public class AuthService {
             passwordBuilder.append(characters.charAt(index));
         }
         return passwordBuilder.toString();
-    }
-
-    public boolean validateToken(String jwt) {
-        String[] parts = jwt.split(" ");
-        jwt = parts[1];
-       //jwtTokenUtils.validateToken(jwt);
-
-        Optional<Token> tokenEntity = tokenRepository.findByToken(jwt);
-        if(!tokenEntity.isPresent()) return false;
-
-        Token token = tokenEntity.get();
-        if (token.isLoggedOut()) return false;
-
-        String username = jwtTokenUtils.getUsername(jwt);
-        if (loginAttemptService.isBlocked(username)) return false;
-
-        if (jwtTokenUtils.isExpired(jwt)) return false;
-
-        return true;
     }
 }

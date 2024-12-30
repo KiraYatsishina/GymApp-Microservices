@@ -1,7 +1,6 @@
 package micro.authserver.config;
 
 import micro.authserver.service.UserService;
-import micro.authserver.util.JwtRequestFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,11 +11,9 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -25,22 +22,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class AuthConfig {
 
     private UserService userService;
-    private JwtRequestFilter jwtRequestFilter;
-    private CustomLogoutHandler customLogoutHandler;
-
-    @Autowired
-    public void setCustomLogoutHandler(CustomLogoutHandler customLogoutHandler) {
-        this.customLogoutHandler = customLogoutHandler;
-    }
 
     @Autowired
     public void setUserService(UserService userService) {
         this.userService = userService;
-    }
-
-    @Autowired
-    public void setJwtRequestFilter(JwtRequestFilter jwtRequestFilter) {
-        this.jwtRequestFilter = jwtRequestFilter;
     }
 
     @Bean
@@ -49,20 +34,15 @@ public class AuthConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/token",
                                 "/signup-trainer",
-                                "/signup-trainee",
-                                "/validate")
+                                "/signup-trainee"
+                                )
                         .permitAll()
                         .anyRequest().authenticated()
                 ).exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 ).sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                ).addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
-                .logout(l -> l.logoutUrl("/logout")
-                        .addLogoutHandler(customLogoutHandler)
-                        .logoutSuccessHandler(
-                                ((request, response, authentication) -> SecurityContextHolder.clearContext())
-                        ))
+                )
                 .build();
     }
 
