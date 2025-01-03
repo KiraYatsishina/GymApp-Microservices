@@ -4,8 +4,9 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import micro.gymapp.client.TrainersWorkloadClient;
+import micro.gymapp.dto.ActionTrainingDTO;
 import micro.gymapp.dto.CreateTrainingDTO;
-import micro.gymapp.dto.Trainee.SignupTrainee;
 import micro.gymapp.dto.Trainer.SignupTrainer;
 import micro.gymapp.dto.Trainer.TrainerDTO;
 import micro.gymapp.dto.Trainer.UpdateTrainerDTO;
@@ -13,11 +14,9 @@ import micro.gymapp.dto.TrainingDTO;
 import micro.gymapp.dto.UserDTO;
 import micro.gymapp.mapper.TrainerMapper;
 import micro.gymapp.mapper.TrainingMapper;
-import micro.gymapp.model.Trainee;
 import micro.gymapp.model.Trainer;
 import micro.gymapp.model.Training;
 import micro.gymapp.model.TrainingTypeEnum;
-import micro.gymapp.service.TraineeService;
 import micro.gymapp.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -27,7 +26,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import micro.gymapp.service.TrainingService;
-import micro.gymapp.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,14 +51,17 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final Timer trainerTrainingListTimer;
     private final TrainingService trainingService;
+    private final TrainersWorkloadClient trainersWorkloadClient;
 
     @Autowired
     public TrainerController(TrainerService trainerService,
                              MeterRegistry meterRegistry,
-                             TrainingService trainingService) {
+                             TrainingService trainingService,
+                             TrainersWorkloadClient trainersWorkloadClient) {
         this.trainerService = trainerService;
         this.trainingService = trainingService;
         this.trainerTrainingListTimer = meterRegistry.timer("trainer.trainingList.execution.time");
+        this.trainersWorkloadClient = trainersWorkloadClient;
     }
 
     @PostMapping("/signup")
@@ -177,24 +178,67 @@ public class TrainerController {
                     content = @Content(schema = @Schema(implementation = TrainingDTO.class))),
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content)
     })
-    public ResponseEntity<?> addTraining(Principal principal, @RequestBody CreateTrainingDTO createTrainingDTO) {
+    public ResponseEntity<?> addTraining(@RequestBody CreateTrainingDTO createTrainingDTO) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
-        logger.info("Transaction ID: {}, Endpoint: /trainer/addTraining, Request received to add training by trainer: {}", transactionId, username);
+        //logger.info("Transaction ID: {}, Endpoint: /trainer/addTraining, Request received to add training by trainer: {}", transactionId, username);
 
         try {
             Training training = trainingService.addTraining(createTrainingDTO);
-            logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, username);
+            //logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, username);
+
+            ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
+                    .userName(createTrainingDTO.getTrainerUsername())
+                    .firstName(training.getTrainer().getFirstName())
+                    .lastName(training.getTrainer().getLastName())
+                    .isActive(training.getTrainer().isActive())
+                    .trainingDate(createTrainingDTO.getDate().toString())
+                    .duration(createTrainingDTO.getDuration())
+                    .actionType("ADD")
+                    .build();
+
+
+            trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
+
             return ResponseEntity.status(HttpStatus.OK).body(TrainingMapper.toDTO(training, false));
         } catch (Exception e) {
-            logger.error("Transaction ID: {}, Failed to add training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
+            //logger.error("Transaction ID: {}, Failed to add training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
     @PostMapping("/deleteTraining")
-    public ResponseEntity<?> deleteTraining(Principal principal, @RequestBody TrainingDTO trainingDTO) {
-        return null;
+    @Operation(summary = "Delete training", description = "Allows a trainer to delete an existing training session.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Training deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
+            @ApiResponse(responseCode = "404", description = "Training not found", content = @Content)
+    })
+    public ResponseEntity<?> deleteTraining(Principal principal, @RequestBody Long trainingId) {
+        String transactionId = UUID.randomUUID().toString();
+        String username = principal.getName();
+        logger.info("Transaction ID: {}, Endpoint: /trainer/deleteTraining, Request received to delete training for trainer: {}", transactionId, username);
+
+        try {
+            Training training = trainingService.deleteTraining(trainingId);
+
+            ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
+                    .userName(training.getTrainer().getUsername())
+                    .firstName(training.getTrainer().getFirstName())
+                    .lastName(training.getTrainer().getLastName())
+                    .isActive(training.getTrainer().isActive())
+                    .trainingDate(training.getTrainingDate().toString())
+                    .duration(training.getDuration())
+                    .actionType("DELETE")
+                    .build();
+
+            trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
+
+            return ResponseEntity.status(HttpStatus.OK).body(TrainingMapper.toDTO(training, false));
+        } catch (Exception e) {
+            logger.error("Transaction ID: {}, Failed to delete training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }
+
     }
 
 }

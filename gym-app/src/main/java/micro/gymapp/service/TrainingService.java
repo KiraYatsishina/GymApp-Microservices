@@ -81,4 +81,14 @@ public class TrainingService {
         Training savedTraining = trainingRepository.save(training);
         return savedTraining;
     }
+
+
+    public Training deleteTraining(Long trainingId) throws Exception {
+        Training training = trainingRepository.findTrainingById(trainingId).orElseThrow(() -> {
+            return new Exception("Training not found");
+        });
+
+        trainingRepository.delete(training);
+        return training;
+    }
 }

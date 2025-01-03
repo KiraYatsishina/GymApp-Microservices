@@ -29,8 +29,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http.csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/trainer/**").hasAuthority("ROLE_TRAINER")
+                        .requestMatchers("/h2-ui/**", "/trainer/**").permitAll()
+                     //   .requestMatchers("/trainer/**").hasAuthority("ROLE_TRAINER")
                         .anyRequest().permitAll()
+                )
+               // .headers(headers -> headers.frameOptions().disable())
+                .headers((headers) ->
+                        headers
+                                .frameOptions((frameOptions) -> frameOptions.disable())
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class).exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))

@@ -7,10 +7,7 @@ import micro.trainersworkload.dto.TrainerWorkloadDTO;
 import micro.trainersworkload.service.TrainersWorkloadService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -19,18 +16,17 @@ public class TrainersWorkloadController {
 
     private final TrainersWorkloadService trainersWorkloadService;
 
-    @GetMapping()
-    public ResponseEntity<MonthlySummaryDTO> getTrainerWorkload(TrainerWorkloadDTO workloadDTO) {
-        return new ResponseEntity<>(new MonthlySummaryDTO(), HttpStatus.OK);
+    @GetMapping("/monthly-workload")
+    public ResponseEntity<MonthlySummaryDTO> getTrainerWorkload(@RequestBody TrainerWorkloadDTO workloadDTO) {
+        MonthlySummaryDTO monthlySummaryDTO = trainersWorkloadService.getTrainerWorkload(workloadDTO);
+        if(monthlySummaryDTO == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(monthlySummaryDTO, HttpStatus.OK);
     }
 
-    @PostMapping("/action-training-duration")
-    public ResponseEntity actionTrainingDuration(ActionTrainingDTO trainingDTO){
+    @PutMapping("/update-workload")
+    public ResponseEntity<Void> updateTrainerWorkload(@RequestBody ActionTrainingDTO actionTrainingDTO) {
+        trainersWorkloadService.updateTrainerWorkload(actionTrainingDTO);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @GetMapping("/check")
-    public ResponseEntity<String> checkTraining(){
-        return new ResponseEntity<>("ok", HttpStatus.OK);
-    }
 }

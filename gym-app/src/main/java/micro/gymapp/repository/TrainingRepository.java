@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface TrainingRepository extends JpaRepository<Training, Long> {
 
@@ -31,4 +32,8 @@ public interface TrainingRepository extends JpaRepository<Training, Long> {
                                         @Param("fromDate") LocalDate fromDate,
                                         @Param("toDate") LocalDate toDate,
                                         @Param("traineeName") String traineeName);
+
+
+
+    Optional<Training> findTrainingById(Long id);
 }

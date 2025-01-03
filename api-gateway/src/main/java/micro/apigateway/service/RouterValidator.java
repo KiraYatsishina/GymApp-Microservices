@@ -13,9 +13,9 @@ public class RouterValidator {
             "/gym-app/token",
             "/gym-app/trainer/signup",
             "/gym-app/trainee/signup",
-
-            //"/workload/trainer/check",
-           // "/workload/trainer/action-training-duration",
+            "/workload/h2-ui/**",
+            "/workload/trainer/update-workload",
+            "/workload/trainer/monthly-workload",
             "/eureka"
     );
 

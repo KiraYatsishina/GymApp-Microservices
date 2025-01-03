@@ -24,10 +24,12 @@ public class Trainer {
 
     private String lastName;
 
-    private String userName;
+    private String username;
 
     private boolean status;
 
     @OneToMany(mappedBy = "trainer", fetch = FetchType.LAZY)
     private Set<Workload> workloads;
+
+    private int totalDuration;
 }

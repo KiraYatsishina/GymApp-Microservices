@@ -14,10 +14,10 @@
     <property name="show_sql">true</property>
     <property name="format_sql">true</property>
 
-    <mapping class="com.example.springpr.gymapp.model.Trainer"/>
-    <mapping class="com.example.springpr.gymapp.model.Trainee"/>
-    <mapping class="com.example.springpr.gymapp.model.TrainingType"/>
-    <mapping class="com.example.springpr.gymapp.model.Training"/>
+<!--    <mapping class="com.example.springpr.gymapp.model.Trainer"/>-->
+<!--    <mapping class="com.example.springpr.gymapp.model.Trainee"/>-->
+<!--    <mapping class="com.example.springpr.gymapp.model.TrainingType"/>-->
+<!--    <mapping class="com.example.springpr.gymapp.model.Training"/>-->
 
     <!-- DB schema will be updated if needed -->
     <!-- <property name="hibernate.hbm2ddl.auto">update</property> -->

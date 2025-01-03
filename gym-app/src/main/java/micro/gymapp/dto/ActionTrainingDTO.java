@@ -1,4 +1,4 @@
-package micro.trainersworkload.dto;
+package micro.gymapp.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
