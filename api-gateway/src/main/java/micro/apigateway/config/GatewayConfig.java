@@ -22,6 +22,9 @@ public class GatewayConfig {
                 .route("auth-server", r -> r.path("/auth/**")
                         .filters(f -> f.filter(filter))
                         .uri("lb://auth-server"))
+                .route("gym-app", r -> r.path("/gym-app/**")
+                        .filters(f -> f.filter(filter))
+                        .uri("lb://gym-app"))
                 .build();
 
     }
