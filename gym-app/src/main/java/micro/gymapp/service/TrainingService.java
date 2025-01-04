@@ -12,9 +12,11 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,6 +44,10 @@ public class TrainingService {
                 .collect(Collectors.toList());
     }
 
+    public Optional<Training> getTrainingById(Long id){
+        return trainingRepository.findById(id);
+    }
+    @Transactional
     public Training addTraining(CreateTrainingDTO request) throws Exception {
         Trainee trainee = traineeRepository.findByUsername(request.getTraineeUsername())
                 .orElseThrow(() -> {
@@ -82,7 +88,7 @@ public class TrainingService {
         return savedTraining;
     }
 
-
+    @Transactional
     public Training deleteTraining(Long trainingId) throws Exception {
         Training training = trainingRepository.findTrainingById(trainingId).orElseThrow(() -> {
             return new Exception("Training not found");

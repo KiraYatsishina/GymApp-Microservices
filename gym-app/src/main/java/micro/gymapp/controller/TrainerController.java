@@ -17,6 +17,7 @@ import micro.gymapp.mapper.TrainingMapper;
 import micro.gymapp.model.Trainer;
 import micro.gymapp.model.Training;
 import micro.gymapp.model.TrainingTypeEnum;
+import micro.gymapp.repository.TrainerRepository;
 import micro.gymapp.service.TrainerService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -32,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -52,16 +54,18 @@ public class TrainerController {
     private final Timer trainerTrainingListTimer;
     private final TrainingService trainingService;
     private final TrainersWorkloadClient trainersWorkloadClient;
+    private final TrainerRepository trainerRepository;
 
     @Autowired
     public TrainerController(TrainerService trainerService,
                              MeterRegistry meterRegistry,
                              TrainingService trainingService,
-                             TrainersWorkloadClient trainersWorkloadClient) {
+                             TrainersWorkloadClient trainersWorkloadClient, TrainerRepository trainerRepository) {
         this.trainerService = trainerService;
         this.trainingService = trainingService;
         this.trainerTrainingListTimer = meterRegistry.timer("trainer.trainingList.execution.time");
         this.trainersWorkloadClient = trainersWorkloadClient;
+        this.trainerRepository = trainerRepository;
     }
 
     @PostMapping("/signup")
@@ -180,31 +184,35 @@ public class TrainerController {
     })
     public ResponseEntity<?> addTraining(@RequestBody CreateTrainingDTO createTrainingDTO) {
         String transactionId = UUID.randomUUID().toString();
-        //logger.info("Transaction ID: {}, Endpoint: /trainer/addTraining, Request received to add training by trainer: {}", transactionId, username);
+        logger.info("Transaction ID: {}, Endpoint: /trainer/addTraining, Request received to add training", transactionId);
 
         try {
-            Training training = trainingService.addTraining(createTrainingDTO);
-            //logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, username);
-
+            Trainer trainer = trainerRepository.findByUsername(createTrainingDTO.getTrainerUsername()).get();
             ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
                     .userName(createTrainingDTO.getTrainerUsername())
-                    .firstName(training.getTrainer().getFirstName())
-                    .lastName(training.getTrainer().getLastName())
-                    .isActive(training.getTrainer().isActive())
+                    .firstName(trainer.getFirstName())
+                    .lastName(trainer.getLastName())
+                    .isActive(true)
                     .trainingDate(createTrainingDTO.getDate().toString())
                     .duration(createTrainingDTO.getDuration())
                     .actionType("ADD")
                     .build();
 
+            ResponseEntity<?> response = trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new Exception("Failed to update trainer workload");
+            }
 
-            trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
+            Training training = trainingService.addTraining(createTrainingDTO);
+            logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, createTrainingDTO.getTrainerUsername());
 
-            return ResponseEntity.status(HttpStatus.OK).body(TrainingMapper.toDTO(training, false));
+            return ResponseEntity.ok(TrainingMapper.toDTO(training, false));
         } catch (Exception e) {
-            //logger.error("Transaction ID: {}, Failed to add training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            logger.error("Transaction ID: {}, Failed to add training, Error: {}", transactionId, e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
 
     @PostMapping("/deleteTraining")
     @Operation(summary = "Delete training", description = "Allows a trainer to delete an existing training session.")
@@ -219,8 +227,14 @@ public class TrainerController {
         logger.info("Transaction ID: {}, Endpoint: /trainer/deleteTraining, Request received to delete training for trainer: {}", transactionId, username);
 
         try {
-            Training training = trainingService.deleteTraining(trainingId);
+            Optional<Training> trainingOpt = trainingService.getTrainingById(trainingId);
 
+            if (trainingOpt.isEmpty()) {
+                logger.warn("Transaction ID: {}, Training with ID {} not found for trainer: {}", transactionId, trainingId, username);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Training not found");
+            }
+
+            Training training = trainingOpt.get();
             ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
                     .userName(training.getTrainer().getUsername())
                     .firstName(training.getTrainer().getFirstName())
@@ -231,14 +245,19 @@ public class TrainerController {
                     .actionType("DELETE")
                     .build();
 
-            trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
 
-            return ResponseEntity.status(HttpStatus.OK).body(TrainingMapper.toDTO(training, false));
+            ResponseEntity<?> response = trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
+            if (response.getStatusCode() != HttpStatus.OK) {
+                throw new Exception("Failed to update trainer workload");
+            }
+
+            Training deletedTraining = trainingService.deleteTraining(trainingId);
+            logger.info("Transaction ID: {}, Training deleted successfully for trainer: {}", transactionId, username);
+
+            return ResponseEntity.ok(TrainingMapper.toDTO(deletedTraining, false));
         } catch (Exception e) {
             logger.error("Transaction ID: {}, Failed to delete training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
-
 }

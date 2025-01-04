@@ -11,9 +11,6 @@ import micro.trainersworkload.repository.WorkloadRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.format.TextStyle;
-import java.util.Locale;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -33,12 +30,10 @@ public class TrainersWorkloadService {
             trainer = trainerRepository.save(trainer);
         }
 
-        // Определить месяц и год тренировки
         LocalDate trainingDate = LocalDate.parse(actionTrainingDTO.getTrainingDate());
         int month = trainingDate.getMonth().getValue();
         int year = trainingDate.getYear();
 
-        // Найти или создать запись о нагрузке
         Workload workload = workloadRepository.findByTrainerAndWorkloadYearAndWorkloadMonth(trainer, year, month);
         if (workload == null) {
             workload = new Workload();
@@ -49,7 +44,6 @@ public class TrainersWorkloadService {
             workload = workloadRepository.save(workload);
         }
 
-        // Обновить нагрузку в зависимости от типа действия
         if ("ADD".equalsIgnoreCase(actionTrainingDTO.getActionType())) {
             workload.setTotalDuration(workload.getTotalDuration() + actionTrainingDTO.getDuration());
         } else if ("DELETE".equalsIgnoreCase(actionTrainingDTO.getActionType())) {
@@ -66,15 +60,12 @@ public class TrainersWorkloadService {
             return null;
         }
 
-        // Получить нагрузку за указанный год и месяц
         Workload workload = workloadRepository.findByTrainerAndWorkloadYearAndWorkloadMonth(
                 trainer, workloadDTO.getYear(), workloadDTO.getMonth()
         );
 
-        // Если данных о нагрузке нет, вернуть пустую информацию
         int totalDuration = (workload != null) ? workload.getTotalDuration() : 0;
 
-        // Сформировать ответ
         MonthlySummaryDTO summaryDTO = new MonthlySummaryDTO();
         summaryDTO.setYear(workloadDTO.getYear());
         summaryDTO.setMonth(workloadDTO.getMonth());
