@@ -33,7 +33,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
@@ -174,7 +173,6 @@ public class TrainerController {
         });
     }
 
-
     @PostMapping("/addTraining")
     @Operation(summary = "Add training", description = "Allows a trainer to add a new training session.")
     @ApiResponses(value = {
@@ -213,7 +211,6 @@ public class TrainerController {
         }
     }
 
-
     @PostMapping("/deleteTraining")
     @Operation(summary = "Delete training", description = "Allows a trainer to delete an existing training session.")
     @ApiResponses(value = {
@@ -244,7 +241,6 @@ public class TrainerController {
                     .duration(training.getDuration())
                     .actionType("DELETE")
                     .build();
-
 
             ResponseEntity<?> response = trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
             if (response.getStatusCode() != HttpStatus.OK) {

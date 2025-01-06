@@ -1,6 +1,7 @@
 package micro.gymapp.dto.Trainee;
 
 
+import lombok.Builder;
 import micro.gymapp.dto.Trainer.ShortTrainerDTO;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -12,6 +13,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class TraineeDTO {
     private String username;
     private String firstName;

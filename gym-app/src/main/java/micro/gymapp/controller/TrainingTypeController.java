@@ -43,5 +43,4 @@ public class TrainingTypeController {
         logger.info("Transaction ID: {}, Successfully retrieved {} training types", transactionId, trainingTypes.size());
         return ResponseEntity.ok(trainingTypes);
     }
-
 }

@@ -208,7 +208,7 @@ public class TraineeController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TrainingDTO.class)))),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<?> getTraineeTrainingList(Principal principal,
+    public ResponseEntity<List<TrainingDTO> > getTraineeTrainingList(Principal principal,
                                                     @Parameter(description = "Start date to filter trainings")
                                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                                     @Parameter(description = "End date to filter trainings")

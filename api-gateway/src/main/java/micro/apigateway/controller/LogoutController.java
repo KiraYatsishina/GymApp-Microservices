@@ -14,7 +14,7 @@ public class LogoutController {
 
     @PostMapping("/logout")
     public ResponseEntity<String> addTokenToBlacklist(@RequestHeader("Authorization") String token) {
-        if (token == null && token.isEmpty() || !token.startsWith("Bearer ")) {
+        if (token == null  || token.isEmpty() || !token.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().body("Invalid token");
         }
 

@@ -6,8 +6,6 @@ import micro.gymapp.model.Role;
 import micro.gymapp.model.User;
 import micro.gymapp.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -82,7 +80,6 @@ public class UserService implements UserDetailsService {
         return false;
     }
 
-
     public  <T extends User> Optional<UserDTO> signUpUser(T user, Role role, Function<T, T> saveFunction) {
         long count = userRepository.countByFirstNameAndLastName(user.getFirstName(), user.getLastName());
         String username = generateUniqueUsername(user.getFirstName(), user.getLastName(), count);
@@ -102,11 +99,11 @@ public class UserService implements UserDetailsService {
         return Optional.of(userDTO);
     }
 
-    private String generateUniqueUsername(String firstName, String lastName, long count) {
+    public String generateUniqueUsername(String firstName, String lastName, long count) {
         return firstName + "." + lastName + (count > 0 ? count : "");
     }
 
-    private String generatePassword() {
+    public String generatePassword() {
         String characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         SecureRandom random = new SecureRandom();
         StringBuilder passwordBuilder = new StringBuilder(10);
