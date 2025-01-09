@@ -23,9 +23,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
-@EnableWebSecurity
+//@EnableWebSecurity
 @RequiredArgsConstructor
-@EnableGlobalMethodSecurity(securedEnabled = true)
+//@EnableGlobalMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
     @Lazy
@@ -43,10 +43,7 @@ public class SecurityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers( "/token", "/trainee/signup", "/trainer/signup").permitAll()
-                        .requestMatchers("/trainee/**").hasAuthority("ROLE_TRAINEE")
-                        .requestMatchers("/trainer/**").hasAuthority("ROLE_TRAINER")
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 ).exceptionHandling(exception -> exception
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
                 ).sessionManagement(session -> session

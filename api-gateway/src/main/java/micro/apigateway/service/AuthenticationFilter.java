@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
+
 @Component
 public class AuthenticationFilter implements GatewayFilter {
 
@@ -29,15 +31,26 @@ public class AuthenticationFilter implements GatewayFilter {
         ServerHttpRequest request = exchange.getRequest();
 
         if (validator.isSecured.test(request)) {
-            if (authMissing(request)) {
-                return onError(exchange, HttpStatus.UNAUTHORIZED);
-            }
+            if (authMissing(request)) return onError(exchange, HttpStatus.UNAUTHORIZED);
 
             final String token = request.getHeaders().getOrEmpty("Authorization").get(0).substring(7);
 
-            if (invalidTokenService.isTokenInvalid(token) || jwtUtils.isExpired(token)) {
+            if (invalidTokenService.isTokenInvalid(token) || jwtUtils.isExpired(token)) return onError(exchange, HttpStatus.UNAUTHORIZED);
+
+            List<String> roles;
+            try {
+               roles = jwtUtils.getRoles(token);
+            }catch (Exception e) {
                 return onError(exchange, HttpStatus.UNAUTHORIZED);
             }
+            String path = request.getURI().getPath();
+
+            if (path.startsWith("/workload/trainer") && !roles.contains("ROLE_TRAINER"))
+                return onError(exchange, HttpStatus.FORBIDDEN);
+            if (path.startsWith("/gym-app/trainer") && !roles.contains("ROLE_TRAINER"))
+                return onError(exchange, HttpStatus.FORBIDDEN);
+            if (path.startsWith("/gym-app/trainee") && !roles.contains("ROLE_TRAINEE"))
+                return onError(exchange, HttpStatus.FORBIDDEN);
 
             ServerHttpRequest modifiedRequest = request.mutate()
                     .header("Authorization", "Bearer " + token)
