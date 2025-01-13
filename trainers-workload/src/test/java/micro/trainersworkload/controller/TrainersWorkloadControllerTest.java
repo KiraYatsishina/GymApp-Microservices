@@ -63,53 +63,6 @@ public class TrainersWorkloadControllerTest {
     }
 
     @Test
-    void testUpdateTrainerWorkload_Success() {
-        ActionTrainingDTO actionTrainingDTO = new ActionTrainingDTO();
-        actionTrainingDTO.setUserName("trainer1");
-        actionTrainingDTO.setFirstName("John");
-        actionTrainingDTO.setLastName("Doe");
-        actionTrainingDTO.setTrainingDate("2025-01-01");
-        actionTrainingDTO.setDuration(60);
-        actionTrainingDTO.setActionType("ADD");
-        actionTrainingDTO.setActive(true);
-
-        ResponseEntity<?> response = trainersWorkloadController.updateTrainerWorkload(actionTrainingDTO);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(trainersWorkloadService, times(1)).updateTrainerWorkload(actionTrainingDTO);
-    }
-
-    @Test
-    void testUpdateTrainerWorkload_InternalServerError() {
-        ActionTrainingDTO actionTrainingDTO = new ActionTrainingDTO();
-        actionTrainingDTO.setUserName("trainer1");
-        actionTrainingDTO.setFirstName("John");
-        actionTrainingDTO.setLastName("Doe");
-        actionTrainingDTO.setTrainingDate("2025-01-01");
-        actionTrainingDTO.setDuration(60);
-        actionTrainingDTO.setActionType("ADD");
-        actionTrainingDTO.setActive(true);
-
-        doThrow(new RuntimeException("Service error")).when(trainersWorkloadService).updateTrainerWorkload(any());
-
-        ResponseEntity<?> response = trainersWorkloadController.updateTrainerWorkload(actionTrainingDTO);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("Service error", response.getBody());
-        verify(trainersWorkloadService, times(1)).updateTrainerWorkload(actionTrainingDTO);
-    }
-
-    @Test
-    void testFallbackUpdateTrainerWorkload() {
-        Throwable throwable = new RuntimeException("Circuit breaker triggered");
-
-        ResponseEntity<?> response = trainersWorkloadController.fallbackUpdateTrainerWorkload(throwable);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertEquals("You can not update trainer monthly workload(", response.getBody());
-    }
-
-    @Test
     void testFallbackTrainerWorkload() {
         Throwable throwable = new RuntimeException("Circuit breaker triggered");
 

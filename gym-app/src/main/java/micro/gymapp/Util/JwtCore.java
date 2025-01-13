@@ -57,7 +57,7 @@ public class JwtCore {
         return getAllClaimsFromToken(token).get("roles", List.class);
     }
 
-    private Claims getAllClaimsFromToken(String token) {
+    public Claims getAllClaimsFromToken(String token) {
         return Jwts.parser()
                 .setSigningKey(secret)
                 .parseClaimsJws(token)

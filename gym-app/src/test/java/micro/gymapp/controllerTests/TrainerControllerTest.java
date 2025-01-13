@@ -1,7 +1,6 @@
 package micro.gymapp.controllerTests;
 
 import io.micrometer.core.instrument.MeterRegistry;
-import micro.gymapp.client.TrainersWorkloadClient;
 import micro.gymapp.controller.TrainerController;
 import micro.gymapp.dto.Trainer.SignupTrainer;
 import micro.gymapp.dto.Trainer.TrainerDTO;
@@ -10,7 +9,6 @@ import micro.gymapp.dto.UserDTO;
 import micro.gymapp.model.Trainer;
 import micro.gymapp.model.TrainingType;
 import micro.gymapp.model.TrainingTypeEnum;
-import micro.gymapp.repository.TrainerRepository;
 import micro.gymapp.service.TrainerService;
 import micro.gymapp.service.TrainingService;
 import org.junit.jupiter.api.BeforeEach;
