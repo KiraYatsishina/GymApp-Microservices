@@ -1,12 +1,9 @@
 package micro.trainersworkload.service;
 
 import lombok.RequiredArgsConstructor;
-import micro.trainersworkload.dto.ActionTrainingDTO;
 import micro.trainersworkload.dto.MonthlySummaryDTO;
 import micro.trainersworkload.dto.TrainerWorkloadDTO;
-import micro.trainersworkload.model.Trainer;
 import micro.trainersworkload.model.Workload;
-import micro.trainersworkload.repository.TrainerRepository;
 import micro.trainersworkload.repository.WorkloadRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,52 +13,46 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 public class TrainersWorkloadService {
 
-    private final TrainerRepository trainerRepository;
     private final WorkloadRepository workloadRepository;
 
-    public void updateTrainerWorkload(ActionTrainingDTO actionTrainingDTO) {
-        Trainer trainer = trainerRepository.findByUsername(actionTrainingDTO.getUserName());
-        if (trainer == null) {
-            trainer = new Trainer();
-            trainer.setUsername(actionTrainingDTO.getUserName());
-            trainer.setFirstName(actionTrainingDTO.getFirstName());
-            trainer.setLastName(actionTrainingDTO.getLastName());
-            trainer.setStatus(actionTrainingDTO.isActive());
-            trainer = trainerRepository.save(trainer);
-        }
+    public void updateTrainerWorkload(String trainerUsername, String date, int duration, String actionType) {
 
-        LocalDate trainingDate = LocalDate.parse(actionTrainingDTO.getTrainingDate());
+        LocalDate trainingDate = LocalDate.parse(date);
         int month = trainingDate.getMonth().getValue();
         int year = trainingDate.getYear();
 
-        Workload workload = workloadRepository.findByTrainerAndWorkloadYearAndWorkloadMonth(trainer, year, month);
+        Workload workload = workloadRepository.findByTrainersUsernameAndWorkloadYearAndWorkloadMonth(trainerUsername, year, month);
         if (workload == null) {
             workload = new Workload();
-            workload.setTrainer(trainer);
+            workload.setTrainersUsername(trainerUsername);
             workload.setWorkloadYear(year);
             workload.setWorkloadMonth(month);
             workload.setTotalDuration(0);
-            workload = workloadRepository.save(workload);
+            try {
+                workload = workloadRepository.save(workload);
+
+            }catch (Exception e){
+                e.printStackTrace();
+            }
         }
 
-        if ("ADD".equalsIgnoreCase(actionTrainingDTO.getActionType())) {
-            workload.setTotalDuration(workload.getTotalDuration() + actionTrainingDTO.getDuration());
-        } else if ("DELETE".equalsIgnoreCase(actionTrainingDTO.getActionType())) {
-            workload.setTotalDuration(Math.max(0, workload.getTotalDuration() - actionTrainingDTO.getDuration()));
+        switch (actionType.toUpperCase()) {
+            case "ADD":
+                workload.setTotalDuration(workload.getTotalDuration() + duration);
+                break;
+            case "DELETE":
+                workload.setTotalDuration(Math.max(0, workload.getTotalDuration() - duration));
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid action type: " + duration);
         }
-
         workloadRepository.save(workload);
     }
 
     public MonthlySummaryDTO getTrainerWorkload(TrainerWorkloadDTO workloadDTO) {
 
-        Trainer trainer = trainerRepository.findByUsername(workloadDTO.getUserName());
-        if (trainer == null) {
-            return null;
-        }
-
-        Workload workload = workloadRepository.findByTrainerAndWorkloadYearAndWorkloadMonth(
-                trainer, workloadDTO.getYear(), workloadDTO.getMonth()
+        Workload workload = workloadRepository.findByTrainersUsernameAndWorkloadYearAndWorkloadMonth(
+                workloadDTO.getUserName(), workloadDTO.getYear(), workloadDTO.getMonth()
         );
 
         int totalDuration = (workload != null) ? workload.getTotalDuration() : 0;

@@ -1,12 +1,9 @@
 package micro.trainersworkload.service;
 
 import micro.trainersworkload.controller.TrainersWorkloadController;
-import micro.trainersworkload.dto.ActionTrainingDTO;
 import micro.trainersworkload.dto.MonthlySummaryDTO;
 import micro.trainersworkload.dto.TrainerWorkloadDTO;
-import micro.trainersworkload.model.Trainer;
 import micro.trainersworkload.model.Workload;
-import micro.trainersworkload.repository.TrainerRepository;
 import micro.trainersworkload.repository.WorkloadRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

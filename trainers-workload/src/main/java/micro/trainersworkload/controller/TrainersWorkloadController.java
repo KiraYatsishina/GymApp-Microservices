@@ -2,7 +2,6 @@ package micro.trainersworkload.controller;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
-import micro.trainersworkload.dto.ActionTrainingDTO;
 import micro.trainersworkload.dto.MonthlySummaryDTO;
 import micro.trainersworkload.dto.TrainerWorkloadDTO;
 import micro.trainersworkload.service.TrainersWorkloadService;
@@ -49,34 +48,34 @@ public class TrainersWorkloadController {
         }
     }
 
-    @PutMapping("/update-workload")
-    @CircuitBreaker(name = "updateTrainerWorkload", fallbackMethod = "fallbackUpdateTrainerWorkload")
-    public ResponseEntity updateTrainerWorkload(@RequestBody ActionTrainingDTO actionTrainingDTO) {
-        String transactionId = UUID.randomUUID().toString();
-        String username = actionTrainingDTO.getUserName();
-
-        logger.info("Transaction ID: {}, Endpoint: /trainer/update-workload, User: {}, Request: {}",
-                transactionId, username, actionTrainingDTO);
-
-        try {
-            trainersWorkloadService.updateTrainerWorkload(actionTrainingDTO);
-
-            logger.info("Transaction ID: {}, User: {}, Response: 200 OK", transactionId, username);
-            return new ResponseEntity<>(HttpStatus.OK);
-
-        } catch (Exception ex) {
-            logger.error("Transaction ID: {}, User: {}, Error: {}", transactionId, username, ex.getMessage(), ex);
-            return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+//    @PutMapping("/update-workload")
+//    @CircuitBreaker(name = "updateTrainerWorkload", fallbackMethod = "fallbackUpdateTrainerWorkload")
+//    public ResponseEntity updateTrainerWorkload(@RequestBody ActionTrainingDTO actionTrainingDTO) {
+//        String transactionId = UUID.randomUUID().toString();
+//        String username = actionTrainingDTO.getUserName();
+//
+//        logger.info("Transaction ID: {}, Endpoint: /trainer/update-workload, User: {}, Request: {}",
+//                transactionId, username, actionTrainingDTO);
+//
+//        try {
+//            trainersWorkloadService.updateTrainerWorkload(actionTrainingDTO);
+//
+//            logger.info("Transaction ID: {}, User: {}, Response: 200 OK", transactionId, username);
+//            return new ResponseEntity<>(HttpStatus.OK);
+//
+//        } catch (Exception ex) {
+//            logger.error("Transaction ID: {}, User: {}, Error: {}", transactionId, username, ex.getMessage(), ex);
+//            return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+//        }
+//    }
 
     public ResponseEntity fallbackTrainerWorkload(Throwable throwable) {
         logger.error("Fallback triggered: TrainerWorkload, Error: {}", throwable.getMessage(), throwable);
         return new ResponseEntity<>("You can not get trainer monthly workload(", HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    public ResponseEntity fallbackUpdateTrainerWorkload(Throwable throwable) {
-        logger.error("Fallback triggered: UpdateTrainerWorkload, Error: {}", throwable.getMessage(), throwable);
-        return new ResponseEntity<>("You can not update trainer monthly workload(", HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+//    public ResponseEntity fallbackUpdateTrainerWorkload(Throwable throwable) {
+//        logger.error("Fallback triggered: UpdateTrainerWorkload, Error: {}", throwable.getMessage(), throwable);
+//        return new ResponseEntity<>("You can not update trainer monthly workload(", HttpStatus.INTERNAL_SERVER_ERROR);
+//    }
 }

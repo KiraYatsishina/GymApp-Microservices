@@ -4,8 +4,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
-import micro.gymapp.client.TrainersWorkloadClient;
-import micro.gymapp.dto.ActionTrainingDTO;
 import micro.gymapp.dto.CreateTrainingDTO;
 import micro.gymapp.dto.Trainer.SignupTrainer;
 import micro.gymapp.dto.Trainer.TrainerDTO;
@@ -14,6 +12,7 @@ import micro.gymapp.dto.TrainingDTO;
 import micro.gymapp.dto.UserDTO;
 import micro.gymapp.mapper.TrainerMapper;
 import micro.gymapp.mapper.TrainingMapper;
+import micro.gymapp.message.MessageProducer;
 import micro.gymapp.model.Trainer;
 import micro.gymapp.model.Training;
 import micro.gymapp.model.TrainingTypeEnum;
@@ -34,7 +33,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
@@ -52,19 +50,20 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final Timer trainerTrainingListTimer;
     private final TrainingService trainingService;
-    private final TrainersWorkloadClient trainersWorkloadClient;
     private final TrainerRepository trainerRepository;
+    private final MessageProducer messageProducer;
 
     @Autowired
     public TrainerController(TrainerService trainerService,
                              MeterRegistry meterRegistry,
                              TrainingService trainingService,
-                             TrainersWorkloadClient trainersWorkloadClient, TrainerRepository trainerRepository) {
+                            TrainerRepository trainerRepository,
+                             MessageProducer messageProducer) {
         this.trainerService = trainerService;
         this.trainingService = trainingService;
         this.trainerTrainingListTimer = meterRegistry.timer("trainer.trainingList.execution.time");
-        this.trainersWorkloadClient = trainersWorkloadClient;
         this.trainerRepository = trainerRepository;
+        this.messageProducer = messageProducer;
     }
 
     @PostMapping("/signup")
@@ -185,21 +184,12 @@ public class TrainerController {
         logger.info("Transaction ID: {}, Endpoint: /trainer/addTraining, Request received to add training", transactionId);
 
         try {
-            Trainer trainer = trainerRepository.findByUsername(createTrainingDTO.getTrainerUsername()).get();
-            ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
-                    .userName(createTrainingDTO.getTrainerUsername())
-                    .firstName(trainer.getFirstName())
-                    .lastName(trainer.getLastName())
-                    .isActive(true)
-                    .trainingDate(createTrainingDTO.getDate().toString())
-                    .duration(createTrainingDTO.getDuration())
-                    .actionType("ADD")
-                    .build();
 
-            ResponseEntity<?> response = trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
-            if (response.getStatusCode() != HttpStatus.OK) {
-                throw new Exception("Failed to update trainer workload");
-            }
+            messageProducer.send(
+                    createTrainingDTO.getTrainerUsername(),
+                    createTrainingDTO.getDate().toString(),
+                    createTrainingDTO.getDuration(),
+                    "ADD");
 
             Training training = trainingService.addTraining(createTrainingDTO);
             logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, createTrainingDTO.getTrainerUsername());
@@ -218,7 +208,7 @@ public class TrainerController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "404", description = "Training not found", content = @Content)
     })
-    public ResponseEntity<?> deleteTraining(Principal principal, @RequestBody Long trainingId) {
+    public ResponseEntity deleteTraining(Principal principal, @RequestBody Long trainingId) {
         String transactionId = UUID.randomUUID().toString();
         String username = principal.getName();
         logger.info("Transaction ID: {}, Endpoint: /trainer/deleteTraining, Request received to delete training for trainer: {}", transactionId, username);
@@ -232,25 +222,16 @@ public class TrainerController {
             }
 
             Training training = trainingOpt.get();
-            ActionTrainingDTO actionTrainingDTO = ActionTrainingDTO.builder()
-                    .userName(training.getTrainer().getUsername())
-                    .firstName(training.getTrainer().getFirstName())
-                    .lastName(training.getTrainer().getLastName())
-                    .isActive(training.getTrainer().isActive())
-                    .trainingDate(training.getTrainingDate().toString())
-                    .duration(training.getDuration())
-                    .actionType("DELETE")
-                    .build();
 
-            ResponseEntity<?> response = trainersWorkloadClient.updateTrainerWorkload(actionTrainingDTO);
-            if (response.getStatusCode() != HttpStatus.OK) {
-                throw new Exception("Failed to update trainer workload");
-            }
+            messageProducer.send(training.getTrainer().getUsername(),
+                    training.getTrainingDate().toString(),
+                    training.getDuration(),
+                    "DELETE");
 
-            Training deletedTraining = trainingService.deleteTraining(trainingId);
+            trainingService.deleteTraining(trainingId);
             logger.info("Transaction ID: {}, Training deleted successfully for trainer: {}", transactionId, username);
 
-            return ResponseEntity.ok(TrainingMapper.toDTO(deletedTraining, false));
+            return ResponseEntity.status(HttpStatus.OK).body("Training deleted successfully");
         } catch (Exception e) {
             logger.error("Transaction ID: {}, Failed to delete training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());

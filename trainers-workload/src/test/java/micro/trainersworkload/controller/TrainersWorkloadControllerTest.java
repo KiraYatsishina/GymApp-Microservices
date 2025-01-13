@@ -1,6 +1,5 @@
 package micro.trainersworkload.controller;
 
-import micro.trainersworkload.dto.ActionTrainingDTO;
 import micro.trainersworkload.dto.MonthlySummaryDTO;
 import micro.trainersworkload.dto.TrainerWorkloadDTO;
 import micro.trainersworkload.service.TrainersWorkloadService;

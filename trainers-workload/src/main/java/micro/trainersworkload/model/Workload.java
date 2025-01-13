@@ -28,7 +28,6 @@ public class Workload {
 
     private int totalDuration;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.MERGE, optional = false)
-    @JoinColumn(name = "trainer_id", nullable = false)
-    private Trainer trainer;
+    @Column(nullable = false)
+    private String trainersUsername;
 }
