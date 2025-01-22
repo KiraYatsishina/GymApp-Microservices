@@ -1,13 +1,18 @@
 package micro.trainersworkload.service;
 
 import lombok.RequiredArgsConstructor;
-import micro.trainersworkload.dto.MonthlySummaryDTO;
-import micro.trainersworkload.dto.TrainerWorkloadDTO;
+import micro.trainersworkload.dto.EventDTO;
+import micro.trainersworkload.dto.TrainerWorkloadRequestDTO;
+import micro.trainersworkload.dto.WorkloadResponseDTO;
+import micro.trainersworkload.model.Month;
+import micro.trainersworkload.model.MonthEnum;
 import micro.trainersworkload.model.Workload;
+import micro.trainersworkload.model.Year;
 import micro.trainersworkload.repository.WorkloadRepository;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,53 +20,111 @@ public class TrainersWorkloadService {
 
     private final WorkloadRepository workloadRepository;
 
-    public void updateTrainerWorkload(String trainerUsername, String date, int duration, String actionType) {
+    public void updateTrainerWorkload(EventDTO event) {
 
-        LocalDate trainingDate = LocalDate.parse(date);
-        int month = trainingDate.getMonth().getValue();
-        int year = trainingDate.getYear();
+        int month = event.getTrainingDate().getMonth().getValue();
+        int year = event.getTrainingDate().getYear();
 
-        Workload workload = workloadRepository.findByTrainersUsernameAndWorkloadYearAndWorkloadMonth(trainerUsername, year, month);
-        if (workload == null) {
+        Optional<Workload> optionalWorkload = workloadRepository.findByUsername(event.getUsername());
+        Workload workload;
+        if (optionalWorkload.isEmpty()) {
             workload = new Workload();
-            workload.setTrainersUsername(trainerUsername);
-            workload.setWorkloadYear(year);
-            workload.setWorkloadMonth(month);
-            workload.setTotalDuration(0);
-            try {
-                workload = workloadRepository.save(workload);
+            workload.setUsername(event.getUsername());
+            workload.setFirstName(event.getFirstName());
+            workload.setLastName(event.getLastName());
+            workload.setStatus(event.isStatus());
+            workload.setYears(new ArrayList<>());
 
-            }catch (Exception e){
-                e.printStackTrace();
+            Year newYear = new Year();
+            newYear.setYear(year);
+            newYear.setMonths(new ArrayList<>());
+
+            Month newMonth = new Month();
+            newMonth.setMonth(MonthEnum.fromNumber(month));
+            newMonth.setSummaryDuration(event.getTrainingDuration());
+
+            newYear.getMonths().add(newMonth);
+            workload.getYears().add(newYear);
+        } else {
+            workload = optionalWorkload.get();
+
+            Year yearData = workload.getYears().stream()
+                .filter(y -> y.getYear() == year)
+                .findFirst()
+                .orElseGet(() -> {
+                    Year newYear = new Year();
+                    newYear.setYear(year);
+                    newYear.setMonths(new ArrayList<>());
+                    workload.getYears().add(newYear);
+                    return newYear;
+                });
+
+
+            Month monthData = yearData.getMonths().stream()
+                .filter(m -> m.getMonth().getNumber() == month)
+                .findFirst()
+                .orElseGet(() -> {
+                    Month newMonth = new Month();
+                    newMonth.setMonth(MonthEnum.fromNumber(month));
+                    newMonth.setSummaryDuration(0);
+                    yearData.getMonths().add(newMonth);
+                    return newMonth;
+                });
+
+            switch (event.getAction()) {
+                case ADD:
+                    monthData.setSummaryDuration(
+                        monthData.getSummaryDuration() + event.getTrainingDuration()
+                    );
+                    break;
+
+                case DELETE:
+                    int updatedDuration = monthData.getSummaryDuration() - event.getTrainingDuration();
+                    monthData.setSummaryDuration(Math.max(updatedDuration, 0));
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Invalid action type: " + event.getAction());
             }
         }
 
-        switch (actionType.toUpperCase()) {
-            case "ADD":
-                workload.setTotalDuration(workload.getTotalDuration() + duration);
-                break;
-            case "DELETE":
-                workload.setTotalDuration(Math.max(0, workload.getTotalDuration() - duration));
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid action type: " + duration);
-        }
         workloadRepository.save(workload);
     }
 
-    public MonthlySummaryDTO getTrainerWorkload(TrainerWorkloadDTO workloadDTO) {
+    public Workload getTrainerWorkload(String username) {
+        return workloadRepository.findByUsername(username).get();
+    }
 
-        Workload workload = workloadRepository.findByTrainersUsernameAndWorkloadYearAndWorkloadMonth(
-                workloadDTO.getUserName(), workloadDTO.getYear(), workloadDTO.getMonth()
-        );
+    public WorkloadResponseDTO getTrainerWorkloadPerMonth(TrainerWorkloadRequestDTO workloadDTO) {
+        Optional<Workload> workload = workloadRepository.findByUsername(workloadDTO.getUserName());
 
-        int totalDuration = (workload != null) ? workload.getTotalDuration() : 0;
+        if (workload.isEmpty()) {
+            return WorkloadResponseDTO.builder()
+                .userName(workloadDTO.getUserName())
+                .year(workloadDTO.getYear())
+                .month(workloadDTO.getMonth())
+                .workload(0)
+                .build();
+        }
 
-        MonthlySummaryDTO summaryDTO = new MonthlySummaryDTO();
-        summaryDTO.setYear(workloadDTO.getYear());
-        summaryDTO.setMonth(workloadDTO.getMonth());
-        summaryDTO.setTotalDuration(totalDuration);
+        Workload trainerWorkload = workload.get();
+        List<Year> years = trainerWorkload.getYears();
 
-        return summaryDTO;
+        Year yearWorkload = years.stream()
+            .filter(year -> year.getYear() == workloadDTO.getYear())
+            .findFirst()
+            .orElse(Year.builder().year(workloadDTO.getYear()).months(new ArrayList<>()).build());
+
+        Month monthWorkload = yearWorkload.getMonths().stream()
+            .filter(month -> month.getMonth().getNumber() == workloadDTO.getMonth())
+            .findFirst()
+            .orElse(Month.builder().month(MonthEnum.fromNumber(workloadDTO.getMonth())).summaryDuration(0).build());
+
+        return WorkloadResponseDTO.builder()
+            .userName(workloadDTO.getUserName())
+            .year(yearWorkload.getYear())
+            .month(monthWorkload.getMonth().getNumber())
+            .workload(monthWorkload.getSummaryDuration())
+            .build();
     }
 }

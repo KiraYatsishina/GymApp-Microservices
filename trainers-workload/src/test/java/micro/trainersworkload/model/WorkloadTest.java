@@ -1,67 +1,88 @@
 package micro.trainersworkload.model;
 
-import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DataJpaTest
 class WorkloadTest {
 
-      @Autowired
-      private EntityManager entityManager;
+  @Test
+  void testWorkloadCreationAndGetters() {
+    List<Year> years = new ArrayList<>();
+    Workload workload = new Workload(
+        "1",
+        "trainer1",
+        "John",
+        "Doe",
+        true,
+        years
+    );
 
-      @Test
-      void testWorkloadEntity_ShouldPersistCorrectly() {
-            Workload workload = new Workload();
-            workload.setWorkloadYear(2025);
-            workload.setWorkloadMonth(1);
-            workload.setTotalDuration(120);
-            workload.setTrainersUsername("testTrainer");
+    assertEquals("1", workload.getId());
+    assertEquals("trainer1", workload.getUsername());
+    assertEquals("John", workload.getFirstName());
+    assertEquals("Doe", workload.getLastName());
+    assertTrue(workload.isStatus());
+    assertEquals(years, workload.getYears());
+  }
 
-            entityManager.persist(workload);
-            entityManager.flush();
+  @Test
+  void testWorkloadSetters() {
+    Workload workload = new Workload();
+    workload.setId("1");
+    workload.setUsername("trainer1");
+    workload.setFirstName("John");
+    workload.setLastName("Doe");
+    workload.setStatus(true);
+    workload.setYears(new ArrayList<>());
 
-            Workload retrieved = entityManager.find(Workload.class, workload.getId());
+    assertEquals("1", workload.getId());
+    assertEquals("trainer1", workload.getUsername());
+    assertEquals("John", workload.getFirstName());
+    assertEquals("Doe", workload.getLastName());
+    assertTrue(workload.isStatus());
+    assertNotNull(workload.getYears());
+  }
 
-            assertNotNull(retrieved, "Workload entity should be persisted and retrievable");
-            assertEquals(2025, retrieved.getWorkloadYear(), "Workload year should match");
-            assertEquals(1, retrieved.getWorkloadMonth(), "Workload month should match");
-            assertEquals(120, retrieved.getTotalDuration(), "Total duration should match");
-            assertEquals("testTrainer", retrieved.getTrainersUsername(), "Trainer's username should match");
-      }
+  @Test
+  void testWorkloadEqualsAndHashCode() {
+    Workload workload1 = new Workload(
+        "1",
+        "trainer1",
+        "John",
+        "Doe",
+        true,
+        new ArrayList<>()
+    );
 
-      @Test
-      void testWorkloadEntity_ShouldGenerateId() {
-            Workload workload = new Workload();
-            workload.setWorkloadYear(2025);
-            workload.setWorkloadMonth(2);
-            workload.setTotalDuration(60);
-            workload.setTrainersUsername("testTrainer2");
+    Workload workload2 = new Workload(
+        "1",
+        "trainer1",
+        "John",
+        "Doe",
+        true,
+        new ArrayList<>()
+    );
 
-            entityManager.persist(workload);
-            entityManager.flush();
+    assertEquals(workload1, workload2);
+    assertEquals(workload1.hashCode(), workload2.hashCode());
+  }
 
-            assertNotNull(workload.getId(), "Workload ID should be generated after persistence");
-      }
+  @Test
+  void testWorkloadToString() {
+    Workload workload = new Workload(
+        "1",
+        "trainer1",
+        "John",
+        "Doe",
+        true,
+        new ArrayList<>()
+    );
 
-      @Test
-      void testWorkloadEntity_ShouldHandleNoArgsConstructor() {
-            Workload workload = new Workload();
-
-            assertNotNull(workload, "Workload object should be created with no-args constructor");
-      }
-
-      @Test
-      void testWorkloadEntity_ShouldHandleAllArgsConstructor() {
-            Workload workload = new Workload(1L, 2025, 1, 120, "testTrainer");
-
-            assertEquals(1L, workload.getId(), "ID should match");
-            assertEquals(2025, workload.getWorkloadYear(), "Workload year should match");
-            assertEquals(1, workload.getWorkloadMonth(), "Workload month should match");
-            assertEquals(120, workload.getTotalDuration(), "Total duration should match");
-            assertEquals("testTrainer", workload.getTrainersUsername(), "Trainer's username should match");
-      }
+    String expected = "Workload(id=1, username=trainer1, firstName=John, lastName=Doe, status=true, years=[])";
+    assertEquals(expected, workload.toString());
+  }
 }
+

@@ -17,11 +17,20 @@ public class MessageProducer {
       private JmsTemplate jmsTemplate;
 
       @Transactional
-      public void send(String trainerUsername, String date, int duration, String actionType){
+      public void send(String trainerUsername,
+                       String firstName,
+                       String lastName,
+                       boolean status,
+                       String date,
+                       int duration,
+                       String actionType){
             jmsTemplate.convertAndSend(TRAINING_QUEUE, trainerUsername, new MessagePostProcessor() {
                   @Override
                   public Message postProcessMessage(Message message) throws JMSException {
                         message.setStringProperty("trainerUsername", trainerUsername);
+                        message.setStringProperty("firstName", firstName);
+                        message.setStringProperty("lastName", lastName);
+                        message.setBooleanProperty("status", status);
                         message.setStringProperty("trainingDate", date);
                         message.setIntProperty("duration", duration);
                         message.setStringProperty("actionType", actionType);
