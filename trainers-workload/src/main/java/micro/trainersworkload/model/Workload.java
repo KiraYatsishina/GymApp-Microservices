@@ -1,33 +1,23 @@
 package micro.trainersworkload.model;
 
-import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import java.util.List;
 
-@Entity
-@Table(name="workloads")
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
 @Getter
+@Document(collection = "workloads")
 public class Workload {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="workload_id")
-
-    private Long id;
-
-    @Column(name = "workload_year", nullable = false)
-    private int workloadYear;
-
-    @Column(name = "workload_month", nullable = false)
-    private int workloadMonth;
-
-    private int totalDuration;
-
-    @Column(nullable = false)
-    private String trainersUsername;
+    private String id;
+    private String username;
+    private String firstName;
+    private String lastName;
+    private boolean status;
+    private List<Year> years;
 }

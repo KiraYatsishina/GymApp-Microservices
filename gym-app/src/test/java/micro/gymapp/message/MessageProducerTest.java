@@ -34,11 +34,14 @@ class MessageProducerTest {
       @Test
       void testSend_withValidInputs() throws JMSException {
             String trainerUsername = "john_doe";
+            String firstname = "john";
+            String lastname = "doe";
+            boolean status = true;
             String trainingDate = "2025-01-13";
             int duration = 60;
             String actionType = "ADD";
 
-            messageProducer.send(trainerUsername, trainingDate, duration, actionType);
+            messageProducer.send(trainerUsername, firstname, lastname, status, trainingDate, duration, actionType);
 
             verify(jmsTemplate, times(1)).convertAndSend(eq(TRAINING_QUEUE), eq(trainerUsername), messagePostProcessorCaptor.capture());
 
@@ -56,11 +59,14 @@ class MessageProducerTest {
             String trainerUsername = "john_doe";
             String trainingDate = "2025-01-13";
             int duration = 60;
+            String firstname = "john";
+            String lastname = "doe";
+            boolean status = true;
             String actionType = "ADD";
 
             doThrow(new JMSException("Error processing message")).when(message).setStringProperty(anyString(), anyString());
 
-            messageProducer.send(trainerUsername, trainingDate, duration, actionType);
+            messageProducer.send(trainerUsername, firstname, lastname, status, trainingDate, duration, actionType);
 
             verify(jmsTemplate, times(1)).convertAndSend(eq(TRAINING_QUEUE), eq(trainerUsername), any(MessagePostProcessor.class));
       }

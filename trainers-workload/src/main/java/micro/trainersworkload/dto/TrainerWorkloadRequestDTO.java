@@ -7,7 +7,8 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class TrainerWorkloadDTO {
+public class TrainerWorkloadRequestDTO {
+
     private String userName;
     private int year;
     private int month;

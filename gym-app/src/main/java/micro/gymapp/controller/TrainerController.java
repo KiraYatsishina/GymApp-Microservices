@@ -185,13 +185,17 @@ public class TrainerController {
 
         try {
 
-            messageProducer.send(
-                    createTrainingDTO.getTrainerUsername(),
-                    createTrainingDTO.getDate().toString(),
-                    createTrainingDTO.getDuration(),
-                    "ADD");
-
             Training training = trainingService.addTraining(createTrainingDTO);
+
+            messageProducer.send(
+                training.getTrainer().getUsername(),
+                training.getTrainer().getFirstName(),
+                training.getTrainer().getLastName(),
+                training.getTrainer().isActive(),
+                training.getTrainingDate().toString(),
+                training.getDuration(),
+                "ADD");
+
             logger.info("Transaction ID: {}, Training added successfully for trainer: {}", transactionId, createTrainingDTO.getTrainerUsername());
 
             return ResponseEntity.ok(TrainingMapper.toDTO(training, false));
@@ -224,9 +228,12 @@ public class TrainerController {
             Training training = trainingOpt.get();
 
             messageProducer.send(training.getTrainer().getUsername(),
-                    training.getTrainingDate().toString(),
-                    training.getDuration(),
-                    "DELETE");
+                training.getTrainer().getFirstName(),
+                training.getTrainer().getLastName(),
+                training.getTrainer().isActive(),
+                training.getTrainingDate().toString(),
+                training.getDuration(),
+                "DELETE");
 
             trainingService.deleteTraining(trainingId);
             logger.info("Transaction ID: {}, Training deleted successfully for trainer: {}", transactionId, username);
