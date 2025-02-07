@@ -16,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByFirstNameAndLastName(@Param("firstName") String firstName, @Param("lastName") String lastName);
 
     void deleteByUsername(String username);
+
+    Optional<User> findByUsernameAndPassword(String username, String password);
 }

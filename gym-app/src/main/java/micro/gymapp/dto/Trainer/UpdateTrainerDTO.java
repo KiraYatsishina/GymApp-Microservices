@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateTrainerDTO {
+    private String username;
     private String firstName;
     private String lastName;
     private String specialization;

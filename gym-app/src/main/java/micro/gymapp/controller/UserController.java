@@ -34,9 +34,9 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "User status changed successfully.", content = @Content),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content)
     })
-    public ResponseEntity<?> changeStatus(Principal principal, @RequestParam boolean status){
+    public ResponseEntity<?> changeStatus(@RequestParam String username,
+                                          @RequestParam boolean status){
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
         logger.info("Transaction ID: {}, Request to change status of user: {}, New status: {}", transactionId, username, status);
 
         Optional<User> userOptional = userService.findByUsername(username);
@@ -62,9 +62,9 @@ public class UserController {
             @ApiResponse(responseCode = "400", description = "Invalid request data or old password is incorrect.", content = @Content),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content)
     })
-    public ResponseEntity<?> changePassword(Principal principal, @RequestBody ChangeLoginRequest changeLoginRequest) {
+    public ResponseEntity<?> changePassword(@RequestBody ChangeLoginRequest changeLoginRequest) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
+        String username = changeLoginRequest.getUsername();
         logger.info("Transaction ID: {}, Request to change password for user: {}", transactionId, username);
 
         if (changeLoginRequest.getOldPassword() == null || changeLoginRequest.getNewPassword() == null ||
@@ -89,5 +89,4 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Old password is incorrect.");
         }
     }
-
 }

@@ -5,6 +5,7 @@ import io.micrometer.core.instrument.Timer;
 import micro.gymapp.dto.Trainee.SignupTrainee;
 import micro.gymapp.dto.Trainee.TraineeDTO;
 import micro.gymapp.dto.Trainee.UpdateTraineeDTO;
+import micro.gymapp.dto.Trainee.UpdateTrainersListForm;
 import micro.gymapp.dto.Trainer.ShortTrainerDTO;
 import micro.gymapp.dto.TrainingDTO;
 import micro.gymapp.dto.UserDTO;
@@ -30,8 +31,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -86,10 +85,8 @@ public class TraineeController {
             @ApiResponse(responseCode = "404", description = "Trainee profile not found", content = @Content)
     })
     public ResponseEntity<TraineeDTO> getMyProfile(
-            @Parameter(description = "Principal representing the authenticated trainee", required = true)
-            Principal principal) {
+            @RequestParam String username) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
         logger.info("Transaction ID: {}, Endpoint: /myProfile, Request received for user: {}", transactionId, username);
         Optional<TraineeDTO> traineeDTOOptional = traineeService.findByUsername(username);
 
@@ -110,9 +107,9 @@ public class TraineeController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<?> updateTraineeProfile(Principal principal, @RequestBody UpdateTraineeDTO updateTraineeDTO) {
+    public ResponseEntity<?> updateTraineeProfile(@RequestBody UpdateTraineeDTO updateTraineeDTO) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
+        String username = updateTraineeDTO.getUsername();
         logger.info("Transaction ID: {}, Endpoint: /updateProfile, Request received for user: {}", transactionId, username);
 
         if (updateTraineeDTO.getFirstName() == null || updateTraineeDTO.getFirstName().isEmpty()) {
@@ -124,7 +121,7 @@ public class TraineeController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Last Name is required");
         }
 
-        Optional<Trainee> updatedTrainee = traineeService.updateTraineeProfile(username, updateTraineeDTO);
+        Optional<Trainee> updatedTrainee = traineeService.updateTraineeProfile(updateTraineeDTO);
         if (updatedTrainee.isPresent()) {
             TraineeDTO traineeDTO = TraineeMapper.toDTO(updatedTrainee.get(), true);
             logger.info("Transaction ID: {}, Profile updated successfully for user: {}", transactionId, username);
@@ -143,9 +140,9 @@ public class TraineeController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ShortTrainerDTO.class)))),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<List<ShortTrainerDTO>> getNotAssignedTrainersList(Principal principal) {
+    public ResponseEntity<List<ShortTrainerDTO>> getNotAssignedTrainersList(@RequestParam String username) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
+
         logger.info("Transaction ID: {}, Endpoint: /notAssignedTrainersList, Request received for Trainee: {}", transactionId, username);
         Optional<TraineeDTO> traineeDTOOptional = traineeService.findByUsername(username);
         if(!traineeDTOOptional.isPresent()) {
@@ -165,11 +162,11 @@ public class TraineeController {
             @ApiResponse(responseCode = "400", description = "Invalid trainer usernames", content = @Content),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<?> updateTrainersList(Principal principal, @RequestBody List<String> trainerUsernames) {
+    public ResponseEntity<?> updateTrainersList(@RequestBody UpdateTrainersListForm updateTrainersListForm) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
+        String username = updateTrainersListForm.getUsername();
         logger.info("Transaction ID: {}, Endpoint: /updateTrainersList, Request received for user: {}", transactionId, username);
-        List<ShortTrainerDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames);
+        List<ShortTrainerDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, updateTrainersListForm.getTrainerUsernames());
         logger.info("Transaction ID: {}, Trainers list updated successfully for user: {}", transactionId, username);
         return ResponseEntity.ok(updatedTrainers);
     }
@@ -180,9 +177,8 @@ public class TraineeController {
             @ApiResponse(responseCode = "200", description = "User profile deleted successfully.", content = @Content),
             @ApiResponse(responseCode = "404", description = "User not found.", content = @Content)
     })
-    public ResponseEntity<?> deleteUser(Principal principal) {
+    public ResponseEntity<?> deleteUser(@RequestParam String username) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
         logger.info("Transaction ID: {}, Request to delete user: {}", transactionId, username);
 
         Optional<User> userOptional = userService.findByUsername(username);
@@ -208,7 +204,7 @@ public class TraineeController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TrainingDTO.class)))),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<List<TrainingDTO> > getTraineeTrainingList(Principal principal,
+    public ResponseEntity<List<TrainingDTO> > getTraineeTrainingList(@RequestParam String username,
                                                     @Parameter(description = "Start date to filter trainings")
                                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                                     @Parameter(description = "End date to filter trainings")
@@ -219,12 +215,10 @@ public class TraineeController {
                                                     @RequestParam(required = false) String trainingType) {
         return traineeTrainingListTimer.record(() -> {
             String transactionId = UUID.randomUUID().toString();
-            String username = principal.getName();
             logger.info("Transaction ID: {}, Endpoint: /trainee/trainingList, Request received for trainee: {}", transactionId, username);
             List<TrainingDTO> trainings = trainingService.findByTraineeUsername(username, fromDate, toDate, trainerName, trainingType);
             logger.info("Transaction ID: {}, Training list retrieved successfully for trainee: {}", transactionId, username);
             return new ResponseEntity<>(trainings, HttpStatus.OK);
         });
     }
-
 }

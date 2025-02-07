@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChangeLoginRequest {
+    private String username;
     private String oldPassword;
     private String newPassword;
 }

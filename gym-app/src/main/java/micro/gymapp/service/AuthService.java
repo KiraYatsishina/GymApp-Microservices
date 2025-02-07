@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -28,13 +29,14 @@ public class AuthService {
 
     public ResponseEntity<String> createAuthToken(UserDTO userCredentials) {
         String username = userCredentials.getUsername();
+        List<User> users = userRepository.findAll();
         if(loginAttemptService.isBlocked(username)){
             return ResponseEntity.status(HttpStatus.LOCKED).
                     body("User account is locked due to too many failed login attempts. Try again later.");
         }
 
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, userCredentials.getPassword()));
+            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, userCredentials.getPassword())); // вот тут
         } catch (BadCredentialsException e) {
             loginAttemptService.loginFailed(username);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Invalid username or password.");

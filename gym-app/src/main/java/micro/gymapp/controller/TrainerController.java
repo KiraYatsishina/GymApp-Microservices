@@ -33,7 +33,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -98,9 +97,8 @@ public class TrainerController {
                     content = @Content(schema = @Schema(implementation = TrainerDTO.class))),
             @ApiResponse(responseCode = "404", description = "Trainer profile not found", content = @Content)
     })
-    public ResponseEntity<TrainerDTO> getMyProfile(Principal principal) {
+    public ResponseEntity<TrainerDTO> getMyProfile(@RequestParam String username) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
         logger.info("Transaction ID: {}, Endpoint: /myProfile, Request received for user: {}", transactionId, username);
         Optional<TrainerDTO> trainerDTOOptional = trainerService.findByUsername(username);
 
@@ -121,9 +119,9 @@ public class TrainerController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
-    public ResponseEntity<?> updateTrainerProfile(Principal principal, @RequestBody UpdateTrainerDTO updateTrainerDTO) {
+    public ResponseEntity<?> updateTrainerProfile(@RequestBody UpdateTrainerDTO updateTrainerDTO) {
         String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
+        String username = updateTrainerDTO.getUsername();
         logger.info("Transaction ID: {}, Endpoint: /updateProfile, Request received for user: {}", transactionId, username);
         if (updateTrainerDTO.getFirstName() == null || updateTrainerDTO.getFirstName().isEmpty()) {
             logger.warn("Transaction ID: {}, First name is missing", transactionId);
@@ -155,7 +153,7 @@ public class TrainerController {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = TrainingDTO.class)))),
             @ApiResponse(responseCode = "404", description = "Trainer not found", content = @Content)
     })
-    public ResponseEntity<?> getTrainerTrainingList(Principal principal,
+    public ResponseEntity<?> getTrainerTrainingList(@RequestParam String username,
                                                     @Parameter(description = "Start date to filter trainings")
                                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
                                                     @Parameter(description = "End date to filter trainings")
@@ -164,7 +162,6 @@ public class TrainerController {
                                                     @RequestParam(required = false) String traineeName) {
         return trainerTrainingListTimer.record(() -> {
             String transactionId = UUID.randomUUID().toString();
-            String username = principal.getName();
             logger.info("Transaction ID: {}, Endpoint: /trainer/trainingList, Request received for trainer: {}", transactionId, username);
             List<TrainingDTO> trainings = trainingService.findByTrainerUsername(username, fromDate, toDate, traineeName);
             logger.info("Transaction ID: {}, Training list retrieved successfully for trainer: {}", transactionId, username);
@@ -212,16 +209,11 @@ public class TrainerController {
             @ApiResponse(responseCode = "400", description = "Invalid input data", content = @Content),
             @ApiResponse(responseCode = "404", description = "Training not found", content = @Content)
     })
-    public ResponseEntity deleteTraining(Principal principal, @RequestBody Long trainingId) {
-        String transactionId = UUID.randomUUID().toString();
-        String username = principal.getName();
-        logger.info("Transaction ID: {}, Endpoint: /trainer/deleteTraining, Request received to delete training for trainer: {}", transactionId, username);
-
+    public ResponseEntity deleteTraining(@RequestBody Long trainingId) {
         try {
             Optional<Training> trainingOpt = trainingService.getTrainingById(trainingId);
 
             if (trainingOpt.isEmpty()) {
-                logger.warn("Transaction ID: {}, Training with ID {} not found for trainer: {}", transactionId, trainingId, username);
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Training not found");
             }
 
@@ -236,11 +228,8 @@ public class TrainerController {
                 "DELETE");
 
             trainingService.deleteTraining(trainingId);
-            logger.info("Transaction ID: {}, Training deleted successfully for trainer: {}", transactionId, username);
-
             return ResponseEntity.status(HttpStatus.OK).body("Training deleted successfully");
         } catch (Exception e) {
-            logger.error("Transaction ID: {}, Failed to delete training for trainer: {}, Error: {}", transactionId, username, e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

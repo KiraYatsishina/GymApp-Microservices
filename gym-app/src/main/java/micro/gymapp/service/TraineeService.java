@@ -49,7 +49,8 @@ public class TraineeService {
     }
 
     @Transactional
-    public Optional<Trainee> updateTraineeProfile(String username, UpdateTraineeDTO updateTraineeDTO) {
+    public Optional<Trainee> updateTraineeProfile(UpdateTraineeDTO updateTraineeDTO) {
+        String username = updateTraineeDTO.getUsername();
         Optional<Trainee> traineeOptional = traineeRepository.findByUsername(username);
         if (traineeOptional.isPresent()) {
             Trainee trainee = traineeOptional.get();
