@@ -1,7 +1,8 @@
-package micro.trainersworkload.message;
+package micro.trainersworkload.unit.message;
 
 import micro.trainersworkload.dto.ActionEnum;
 import micro.trainersworkload.dto.EventDTO;
+import micro.trainersworkload.message.TrainersWorkloadListener;
 import micro.trainersworkload.service.TrainersWorkloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

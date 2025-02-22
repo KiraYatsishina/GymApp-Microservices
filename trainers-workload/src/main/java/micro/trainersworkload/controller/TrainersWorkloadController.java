@@ -30,21 +30,10 @@ public class TrainersWorkloadController {
         logger.info("Transaction ID: {}, Endpoint: /trainer/monthly-workload, User: {}, Request: {}",
                 transactionId, username, workloadDTO);
 
-        try {
-            WorkloadResponseDTO monthlySummaryDTO = trainersWorkloadService.getTrainerWorkloadPerMonth(workloadDTO);
+        WorkloadResponseDTO monthlySummaryDTO = trainersWorkloadService.getTrainerWorkloadPerMonth(workloadDTO);
 
-            if (monthlySummaryDTO == null) {
-                logger.warn("Transaction ID: {}, User: {}, Response: 404 NOT FOUND", transactionId, username);
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-
-            logger.info("Transaction ID: {}, User: {}, Response: 200 OK, Data: {}", transactionId, username, monthlySummaryDTO);
-            return new ResponseEntity<>(monthlySummaryDTO, HttpStatus.OK);
-
-        } catch (Exception ex) {
-            logger.error("Transaction ID: {}, User: {}, Error: {}", transactionId, username, ex.getMessage(), ex);
-            return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
+        logger.info("Transaction ID: {}, User: {}, Response: 200 OK, Data: {}", transactionId, username, monthlySummaryDTO);
+        return new ResponseEntity<>(monthlySummaryDTO, HttpStatus.OK);
     }
 
     @GetMapping()

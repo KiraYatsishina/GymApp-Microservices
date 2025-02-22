@@ -1,5 +1,6 @@
-package micro.trainersworkload.config;
+package micro.trainersworkload.unit.config;
 
+import micro.trainersworkload.config.AppConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestTemplate;
 

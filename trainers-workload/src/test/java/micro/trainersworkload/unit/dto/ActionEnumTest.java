@@ -1,5 +1,6 @@
-package micro.trainersworkload.dto;
+package micro.trainersworkload.unit.dto;
 
+import micro.trainersworkload.dto.ActionEnum;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

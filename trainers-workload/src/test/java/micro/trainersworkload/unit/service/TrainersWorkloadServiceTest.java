@@ -1,4 +1,4 @@
-package micro.trainersworkload.service;
+package micro.trainersworkload.unit.service;
 
 import micro.trainersworkload.dto.ActionEnum;
 import micro.trainersworkload.dto.EventDTO;
@@ -9,6 +9,7 @@ import micro.trainersworkload.model.MonthEnum;
 import micro.trainersworkload.model.Workload;
 import micro.trainersworkload.model.Year;
 import micro.trainersworkload.repository.WorkloadRepository;
+import micro.trainersworkload.service.TrainersWorkloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

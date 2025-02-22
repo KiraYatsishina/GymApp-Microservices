@@ -1,5 +1,6 @@
-package micro.trainersworkload.config;
+package micro.trainersworkload.unit.config;
 
+import micro.trainersworkload.config.WebConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

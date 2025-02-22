@@ -1,5 +1,7 @@
-package micro.trainersworkload.model;
+package micro.trainersworkload.unit.model;
 
+import micro.trainersworkload.model.Workload;
+import micro.trainersworkload.model.Year;
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;

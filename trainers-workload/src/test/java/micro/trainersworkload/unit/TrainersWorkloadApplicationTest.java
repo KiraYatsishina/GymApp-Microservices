@@ -1,5 +1,6 @@
-package micro.trainersworkload;
+package micro.trainersworkload.unit;
 
+import micro.trainersworkload.TrainersWorkloadApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

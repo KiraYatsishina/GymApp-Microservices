@@ -1,5 +1,7 @@
-package micro.trainersworkload.dto;
+package micro.trainersworkload.unit.dto;
 
+import micro.trainersworkload.dto.ActionEnum;
+import micro.trainersworkload.dto.EventDTO;
 import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 

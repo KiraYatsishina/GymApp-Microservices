@@ -1,5 +1,6 @@
-package micro.trainersworkload.controller;
+package micro.trainersworkload.unit.controller;
 
+import micro.trainersworkload.controller.TrainersWorkloadController;
 import micro.trainersworkload.dto.TrainerWorkloadRequestDTO;
 import micro.trainersworkload.dto.WorkloadResponseDTO;
 import micro.trainersworkload.model.Workload;
@@ -35,32 +36,6 @@ public class TrainersWorkloadControllerTest {
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertNotNull(result.getBody());
         assertEquals(responseDTO, result.getBody());
-        verify(trainersWorkloadService, times(1)).getTrainerWorkloadPerMonth(requestDTO);
-    }
-
-    @Test
-    void testGetTrainerWorkloadPerMonth_NotFound() {
-        TrainerWorkloadRequestDTO requestDTO = new TrainerWorkloadRequestDTO("JohnDoe", 2025, 3);
-
-        when(trainersWorkloadService.getTrainerWorkloadPerMonth(requestDTO)).thenReturn(null);
-
-        ResponseEntity result = trainersWorkloadController.getTrainerWorkloadPerMonth(requestDTO);
-
-        assertEquals(HttpStatus.NOT_FOUND, result.getStatusCode());
-        assertNull(result.getBody());
-        verify(trainersWorkloadService, times(1)).getTrainerWorkloadPerMonth(requestDTO);
-    }
-
-    @Test
-    void testGetTrainerWorkloadPerMonth_InternalServerError() {
-        TrainerWorkloadRequestDTO requestDTO = new TrainerWorkloadRequestDTO("JohnDoe", 2025, 3);
-
-        when(trainersWorkloadService.getTrainerWorkloadPerMonth(requestDTO)).thenThrow(new RuntimeException("Unexpected error"));
-
-        ResponseEntity result = trainersWorkloadController.getTrainerWorkloadPerMonth(requestDTO);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, result.getStatusCode());
-        assertEquals("Unexpected error", result.getBody());
         verify(trainersWorkloadService, times(1)).getTrainerWorkloadPerMonth(requestDTO);
     }
 
