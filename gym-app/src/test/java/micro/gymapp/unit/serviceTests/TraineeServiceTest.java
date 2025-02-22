@@ -9,6 +9,7 @@ import micro.gymapp.model.Trainer;
 import micro.gymapp.model.TrainingType;
 import micro.gymapp.model.TrainingTypeEnum;
 import micro.gymapp.repository.TraineeRepository;
+import micro.gymapp.repository.TrainerRepository;
 import micro.gymapp.service.TraineeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,8 @@ class TraineeServiceTest {
     @Mock
     private TraineeRepository traineeRepository;
 
+    @Mock
+    private TrainerRepository trainerRepository;
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -139,7 +142,7 @@ class TraineeServiceTest {
         trainer2.setSpecialization(trainingType);
 
         when(traineeRepository.findByUsername(traineeUsername)).thenReturn(Optional.of(trainee));
-        when(traineeRepository.findByUsernameIn(trainerUsernames)).thenReturn(List.of(trainer1, trainer2));
+        when(trainerRepository.findByUsernameIn(trainerUsernames)).thenReturn(List.of(trainer1, trainer2));
         when(traineeRepository.save(any(Trainee.class))).thenReturn(trainee);
 
         List<ShortTrainerDTO> result = traineeService.updateTraineeTrainers(traineeUsername, trainerUsernames);

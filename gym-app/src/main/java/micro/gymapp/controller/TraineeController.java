@@ -159,7 +159,7 @@ public class TraineeController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Trainers list updated successfully",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = ShortTrainerDTO.class)))),
-            @ApiResponse(responseCode = "400", description = "Invalid trainer usernames", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Some trainers not found", content = @Content),
             @ApiResponse(responseCode = "404", description = "Trainee not found", content = @Content)
     })
     public ResponseEntity<?> updateTrainersList(@RequestBody UpdateTrainersListForm updateTrainersListForm) {
