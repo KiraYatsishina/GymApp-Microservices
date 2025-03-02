@@ -5,9 +5,9 @@ eureka:
 
 spring:
   activemq:
-    broker-url: "nio://localhost:61616"
-    user: test
-    password: test
+    broker-url: tcp://localhost:61616
+    user: admin
+    password: admin
   mvc:
     view:
       prefix: /WEB-INF/views/
